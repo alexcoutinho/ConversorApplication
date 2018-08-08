@@ -64,7 +64,7 @@ public class Service {
         objectMetadata.setContentType(arquivo.getContentType());
         objectMetadata.setContentLength(arquivo.getSize());*/
 
-      return  s3client.putObject(new PutObjectRequest(configuracao.bucketName, configuracao.key, videoconvertido));
+      return  s3client.putObject(new PutObjectRequest(configuracao.bucketName, configuracao.key,videoconvertido));
 
     }
 
