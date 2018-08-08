@@ -16,11 +16,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
+
 
 
 @RestController
-@RequestMapping("/service/")
+@RequestMapping("/service")
 public class Service {
 
     private Logger logger = LoggerFactory.getLogger(Service.class);
@@ -29,7 +29,7 @@ public class Service {
     private AmazonS3 s3client;
 
     @Autowired
-    private Configuracao configuracao;
+    private Configuracao configuracoes;
 
 
     @RequestMapping(value = "/consultar", method = RequestMethod.GET)
@@ -44,8 +44,7 @@ public class Service {
     public @ResponseBody
     S3Object lerArquivo() {
 
-
-        S3Object video = s3client.getObject(new GetObjectRequest(configuracao.bucketName, configuracao.key));
+        S3Object video = s3client.getObject(new GetObjectRequest(configuracoes.bucketName, configuracoes.key));
 
         if (video == null) {
             throw new RuntimeException("Video nao encontrado no S3.");
@@ -59,12 +58,7 @@ public class Service {
     public @ResponseBody
     PutObjectResult gravarArquivo(@PathVariable("videoconvertido") String videoconvertido) {
 
-        /*ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentType(videoconvertido.getContentType());
-        objectMetadata.setContentLength(videoconvertido.getSize());*/
-
-
-        return s3client.putObject(new PutObjectRequest(configuracao.bucketName, configuracao.key,videoconvertido));
+        return s3client.putObject(new PutObjectRequest(configuracoes.bucketName, configuracoes.key,videoconvertido));
 
     }
 

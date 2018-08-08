@@ -10,23 +10,25 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.stereotype.*;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 
-@Configuration
-@RequestMapping("/configuracao")
+
+@Component
 public class Configuracao {
 
-    @Value("${application.bucketName}")
+    @Value("${bucketName}")
     public String bucketName;
 
-    @Value("${application.Access_key_ID}")
+    @Value("${Access_key_ID}")
     public String key;
 
-    @Value("${application.Secret_access_key}")
+    @Value("${Secret_access_key}")
     public String secret;
 
     @Bean
