@@ -25,8 +25,8 @@ public class Service {
 
     private Logger logger = LoggerFactory.getLogger(Service.class);
 
-    @Autowired
-    private AmazonS3 s3client;
+    //@Autowired
+    //private AmazonS3 s3client;
 
     @Autowired
     private Configuracao configuracoes;
@@ -44,7 +44,7 @@ public class Service {
     public @ResponseBody
     S3Object lerArquivo() {
 
-        S3Object video = s3client.getObject(new GetObjectRequest(configuracoes.bucketName, configuracoes.key));
+        S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, configuracoes.key));
 
         if (video == null) {
             throw new RuntimeException("Video nao encontrado no S3.");
@@ -58,7 +58,7 @@ public class Service {
     public @ResponseBody
     PutObjectResult gravarArquivo(@PathVariable("videoconvertido") String videoconvertido) {
 
-        return s3client.putObject(new PutObjectRequest(configuracoes.bucketName, configuracoes.key,videoconvertido));
+        return configuracoes.S3client().putObject(new PutObjectRequest(configuracoes.bucketName, configuracoes.key,videoconvertido));
 
     }
 

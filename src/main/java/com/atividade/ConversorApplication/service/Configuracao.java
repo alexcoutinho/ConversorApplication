@@ -22,23 +22,33 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Component
 public class Configuracao {
 
-    @Value("${bucketName}")
-    public String bucketName;
+    //@Value("${bucketName}")
+    public String bucketName = "atividadeentrada";
 
-    @Value("${Access_key_ID}")
-    public String key;
+    //@Value("${Access_key_ID}")
+    public String key = "AKIAIYAUEK6T6ZUWYHTA";
 
-    @Value("${Secret_access_key}")
-    public String secret;
+    //@Value("${Secret_access_key}")
+    public String secret = "k0zicLMSsB1E87xCDWsqSddxkYIwdFpaTbLY4xWv";
 
-    @Bean
-    public AmazonS3 s3client() {
+    //@Bean
+    public AmazonS3 S3client() {
 
         AWSCredentials credentials = new BasicAWSCredentials(this.key, this.secret);
 
         AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                .withRegion("us-east-2")
                 .build();
+
+
+
+//        try {
+//            client.getBucketLocation("your-eu-west-1-bucket");
+//        } catch (AmazonS3Exception e) {
+//            e.getAdditionalDetails().get("Region");
+//        }
+
 
         return s3Client;
     }
