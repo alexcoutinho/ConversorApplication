@@ -1,5 +1,7 @@
 package com.atividade.ConversorApplication.service;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -18,9 +20,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 
-
 @Component
 public class Configuracao {
+
+    private Logger logger = LoggerFactory.getLogger(Service.class);
 
     //@Value("${bucketName}")
     public String bucketName = "atividadeentrada";
@@ -34,14 +37,29 @@ public class Configuracao {
     //@Bean
     public AmazonS3 S3client() {
 
-        AWSCredentials credentials = new BasicAWSCredentials(this.key, this.secret);
+        try {
+            AWSCredentials credentials = new BasicAWSCredentials(this.key, this.secret);
 
-        AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .withRegion("us-east-2")
-                .build();
+            AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
+                    .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                    .withRegion("us-east-2")
+                    .build();
 
+            return s3Client;
 
+        } catch (AmazonServiceException e) {
+            logger.info("Caught an AmazonServiceException from PUT requests, rejected reasons:");
+            logger.info("Error Message:    " + e.getMessage());
+            logger.info("HTTP Status Code: " + e.getStatusCode());
+            logger.info("AWS Error Code:   " + e.getErrorCode());
+            logger.info("Error Type:       " + e.getErrorType());
+            logger.info("Request ID:       " + e.getRequestId());
+            throw e;
+        } catch (AmazonClientException e) {
+            logger.info("Caught an AmazonClientException: ");
+            logger.info("Error Message: " + e.getMessage());
+            throw e;
+        }
 
 //        try {
 //            client.getBucketLocation("your-eu-west-1-bucket");
@@ -50,8 +68,6 @@ public class Configuracao {
 //        }
 
 
-        return s3Client;
     }
-
 
 }

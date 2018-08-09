@@ -1,5 +1,7 @@
 package com.atividade.ConversorApplication.service;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -15,8 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.bind.annotation.*;
-
-
 
 
 @RestController
@@ -44,12 +44,28 @@ public class Service {
     public @ResponseBody
     S3Object lerArquivo() {
 
-        S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, configuracoes.key));
+        try {
 
-        if (video == null) {
-            throw new RuntimeException("Video nao encontrado no S3.");
-        } else
-            return video;
+            S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, configuracoes.key));
+
+            if (video == null) {
+                throw new RuntimeException("Video nao encontrado no S3.");
+            } else
+                return video;
+        } catch (AmazonServiceException e) {
+            logger.info("Caught an AmazonServiceException from PUT requests, rejected reasons:");
+            logger.info("Error Message:    " + e.getMessage());
+            logger.info("HTTP Status Code: " + e.getStatusCode());
+            logger.info("AWS Error Code:   " + e.getErrorCode());
+            logger.info("Error Type:       " + e.getErrorType());
+            logger.info("Request ID:       " + e.getRequestId());
+            throw e;
+        } catch (
+                AmazonClientException e) {
+            logger.info("Caught an AmazonClientException: ");
+            logger.info("Error Message: " + e.getMessage());
+            throw e;
+        }
 
     }
 
@@ -58,7 +74,7 @@ public class Service {
     public @ResponseBody
     PutObjectResult gravarArquivo(@PathVariable("videoconvertido") String videoconvertido) {
 
-        return configuracoes.S3client().putObject(new PutObjectRequest(configuracoes.bucketName, configuracoes.key,videoconvertido));
+        return configuracoes.S3client().putObject(new PutObjectRequest(configuracoes.bucketName, configuracoes.key, videoconvertido));
 
     }
 
