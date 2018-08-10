@@ -29,10 +29,11 @@ public class Configuracao {
     public String bucketName = "atividadeentrada";
 
     //@Value("${Access_key_ID}")
-    public String key = "AKIAIYAUEK6T6ZUWYHTA";
+    public String key = "AKIAJGGFWB4OWLLCBSRA";
+
 
     //@Value("${Secret_access_key}")
-    public String secret = "k0zicLMSsB1E87xCDWsqSddxkYIwdFpaTbLY4xWv";
+    public String secret = "PwjYUbcNZ1YPdhJq/xNFan7jI0gtyedMttn9KueF";
 
     //@Bean
     public AmazonS3 S3client() {
