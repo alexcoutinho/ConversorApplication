@@ -26,11 +26,10 @@ public class Configuracao {
     private Logger logger = LoggerFactory.getLogger(Service.class);
 
     //@Value("${bucketName}")
-    public String bucketName = "atividadeentrada";
+    public String bucketName = "https://atividadeentrada.s3.amazonaws.com";
 
     //@Value("${Access_key_ID}")
     public String key = "AKIAJGGFWB4OWLLCBSRA";
-
 
     //@Value("${Secret_access_key}")
     public String secret = "PwjYUbcNZ1YPdhJq/xNFan7jI0gtyedMttn9KueF";

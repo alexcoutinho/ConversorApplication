@@ -18,6 +18,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/service")
@@ -45,8 +48,31 @@ public class Service {
     S3Object lerArquivo() {
 
         try {
+            ArrayList<String> testes = new ArrayList<String>();
+            ArrayList<String> testes2 = new ArrayList<String>();
 
-            S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, configuracoes.key));
+            S3Object video = null, objectPortion = null, headerOverrideObject = null;
+
+            AmazonS3  S3client = configuracoes.S3client();
+
+            for (Bucket bucket : S3client.listBuckets()) {
+                testes.add(bucket.getName());
+            }
+
+            ListObjectsV2Request req = new ListObjectsV2Request().withBucketName("atividadeentrada").withPrefix("entrada/").withDelimiter("/");
+            ListObjectsV2Result listing = S3client.listObjectsV2(req);
+            for (String commonPrefix : listing.getCommonPrefixes()) {
+                testes.add(commonPrefix);
+            }
+            for (S3ObjectSummary summary: listing.getObjectSummaries()) {
+                testes2.add(summary.getKey());
+            }
+
+            ObjectListing a = S3client.listObjects("atividadeentrada", "entrada/");
+            ObjectListing b = S3client.listObjects("atividadeentrada");
+
+
+            video = S3client.getObject(new GetObjectRequest("atividadeentrada", "entrada/sample.dv"));
 
             if (video == null) {
                 throw new RuntimeException("Video nao encontrado no S3.");
