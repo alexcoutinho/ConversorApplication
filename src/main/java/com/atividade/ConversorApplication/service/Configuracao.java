@@ -26,13 +26,18 @@ public class Configuracao {
     private Logger logger = LoggerFactory.getLogger(Service.class);
 
     //@Value("${bucketName}")
-    public String bucketName = "https://atividadeentrada.s3.amazonaws.com";
+    public String bucketName = "atividadeentrada";
 
     //@Value("${Access_key_ID}")
     public String key = "AKIAJGGFWB4OWLLCBSRA";
 
     //@Value("${Secret_access_key}")
     public String secret = "PwjYUbcNZ1YPdhJq/xNFan7jI0gtyedMttn9KueF";
+
+    public String arquivodefeault = "entrada/sample.dv";
+
+    public String keyZencoder = "a19c2bc5058752c895d23298e9e9d116";
+
 
     //@Bean
     public AmazonS3 S3client() {

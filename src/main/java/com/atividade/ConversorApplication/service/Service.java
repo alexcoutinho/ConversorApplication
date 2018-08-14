@@ -18,6 +18,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.bind.annotation.*;
 
+import javax.net.ssl.HttpsURLConnection;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,39 +49,41 @@ public class Service {
 
     @RequestMapping(value = "/lerArquivo", method = RequestMethod.GET)
     public @ResponseBody
-    S3Object lerArquivo() {
+    S3Object lerArquivo(@RequestHeader("videoParaConversao") String videoParaConversao) {
 
         try {
-            ArrayList<String> testes = new ArrayList<String>();
-            ArrayList<String> testes2 = new ArrayList<String>();
 
-            S3Object video = null, objectPortion = null, headerOverrideObject = null;
+            if (videoParaConversao == null) {
+                S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, "entrada/sample.dv"));
 
-            AmazonS3  S3client = configuracoes.S3client();
-
-            for (Bucket bucket : S3client.listBuckets()) {
-                testes.add(bucket.getName());
-            }
-
-            ListObjectsV2Request req = new ListObjectsV2Request().withBucketName("atividadeentrada").withPrefix("entrada/").withDelimiter("/");
-            ListObjectsV2Result listing = S3client.listObjectsV2(req);
-            for (String commonPrefix : listing.getCommonPrefixes()) {
-                testes.add(commonPrefix);
-            }
-            for (S3ObjectSummary summary: listing.getObjectSummaries()) {
-                testes2.add(summary.getKey());
-            }
-
-            ObjectListing a = S3client.listObjects("atividadeentrada", "entrada/");
-            ObjectListing b = S3client.listObjects("atividadeentrada");
-
-
-            video = S3client.getObject(new GetObjectRequest("atividadeentrada", "entrada/sample.dv"));
-
-            if (video == null) {
-                throw new RuntimeException("Video nao encontrado no S3.");
-            } else
                 return video;
+
+            } else {
+
+                try {
+
+
+                    // validar extensao switch
+                    /*
+                    * if(extensao x)
+                    *
+                    * else
+                    * Formato do arquivo inválido
+                    *
+                    * */
+
+
+                    PutObjectResult resultado = gravarArquivo(videoParaConversao);
+                    S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, "saida/sample.mp4"));
+
+                    return video;
+
+                } catch (Exception e) {
+                    throw e;
+                }
+            }
+
+
         } catch (AmazonServiceException e) {
             logger.info("Caught an AmazonServiceException from PUT requests, rejected reasons:");
             logger.info("Error Message:    " + e.getMessage());
@@ -100,8 +106,40 @@ public class Service {
     public @ResponseBody
     PutObjectResult gravarArquivo(@PathVariable("videoconvertido") String videoconvertido) {
 
-        return configuracoes.S3client().putObject(new PutObjectRequest(configuracoes.bucketName, configuracoes.key, videoconvertido));
 
+        try {
+            URL url = new URL("https://app.zencoder.com/api/v2/jobs");
+
+            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+
+            if (con.getResponseCode() != 200) {
+                throw new RuntimeException("HTTPS código erro : " + con.getResponseCode());
+            }
+
+            con.setRequestMethod("POST");
+
+            con.setDoOutput(true);
+            con.setUseCaches(false);
+            con.setConnectTimeout(15000);
+            con.setRequestProperty("Zencoder-Api-Key", configuracoes.keyZencoder);
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("input", videoconvertido);
+
+            con.getOutputStream();
+
+            configuracoes.S3client().putObject(new PutObjectRequest(configuracoes.bucketName, configuracoes.key, videoconvertido));
+
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        }
+
+        return null;
     }
 
 
