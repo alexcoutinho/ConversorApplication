@@ -54,33 +54,18 @@ public class Service {
         try {
 
             if (videoParaConversao == null) {
-                S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, "entrada/sample.dv"));
+                S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, configuracoes.defeaultKeyS3));
 
                 return video;
 
             } else {
 
-                try {
+                PutObjectResult resultado = gravarArquivo(videoParaConversao);
+                S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, "saida/sample.mp4"));
+
+                return video;
 
 
-                    // validar extensao switch
-                    /*
-                    * if(extensao x)
-                    *
-                    * else
-                    * Formato do arquivo inválido
-                    *
-                    * */
-
-
-                    PutObjectResult resultado = gravarArquivo(videoParaConversao);
-                    S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, "saida/sample.mp4"));
-
-                    return video;
-
-                } catch (Exception e) {
-                    throw e;
-                }
             }
 
 
@@ -108,6 +93,7 @@ public class Service {
 
 
         try {
+
             URL url = new URL("https://app.zencoder.com/api/v2/jobs");
 
             HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
@@ -122,7 +108,7 @@ public class Service {
             con.setUseCaches(false);
             con.setConnectTimeout(15000);
             con.setRequestProperty("Zencoder-Api-Key", configuracoes.keyZencoder);
-            con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("Content-Type", configuracoes.ContentType);
             con.setRequestProperty("input", videoconvertido);
 
             con.getOutputStream();

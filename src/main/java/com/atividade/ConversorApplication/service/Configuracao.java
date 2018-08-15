@@ -34,9 +34,9 @@ public class Configuracao {
     //@Value("${Secret_access_key}")
     public String secret = "PwjYUbcNZ1YPdhJq/xNFan7jI0gtyedMttn9KueF";
 
-    public String arquivodefeault = "entrada/sample.dv";
-
     public String keyZencoder = "a19c2bc5058752c895d23298e9e9d116";
+    public String defeaultKeyS3 = "entrada/sample.dv";
+    public String ContentType = "application/json";
 
 
     //@Bean
