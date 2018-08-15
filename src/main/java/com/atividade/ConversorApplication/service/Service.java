@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -97,21 +98,24 @@ public class Service {
             URL url = new URL("https://app.zencoder.com/api/v2/jobs");
 
             HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+            con.setRequestProperty("Zencoder-Api-Key", configuracoes.keyZencoder);
+            con.setRequestProperty("Content-Type", configuracoes.ContentType);
+
+            con.setDoOutput(true);
+            con.setUseCaches(true);
+            con.setDoInput(true);
+            //con.setConnectTimeout(1500000000);
+            con.setRequestProperty("input", videoconvertido);
+            con.setRequestMethod("POST");
+
+            OutputStreamWriter writer = new OutputStreamWriter(con.getOutputStream());
+
+
 
             if (con.getResponseCode() != 200) {
                 throw new RuntimeException("HTTPS código erro : " + con.getResponseCode());
             }
 
-            con.setRequestMethod("POST");
-
-            con.setDoOutput(true);
-            con.setUseCaches(false);
-            con.setConnectTimeout(15000);
-            con.setRequestProperty("Zencoder-Api-Key", configuracoes.keyZencoder);
-            con.setRequestProperty("Content-Type", configuracoes.ContentType);
-            con.setRequestProperty("input", videoconvertido);
-
-            con.getOutputStream();
 
             configuracoes.S3client().putObject(new PutObjectRequest(configuracoes.bucketName, configuracoes.key, videoconvertido));
 
