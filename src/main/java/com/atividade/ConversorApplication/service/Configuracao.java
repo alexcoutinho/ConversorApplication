@@ -7,17 +7,14 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.MappingJsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+
 import org.springframework.stereotype.*;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+
 
 
 @Component
@@ -36,6 +33,8 @@ public class Configuracao {
 
     public String keyZencoder = "a19c2bc5058752c895d23298e9e9d116";
     public String defeaultKeyS3 = "entrada/sample.dv";
+    public String entradaS3 = "entrada/";
+    public String saidaS3 = "saida/";
     public String ContentType = "application/json";
 
 
@@ -74,5 +73,14 @@ public class Configuracao {
 
 
     }
+
+
+    public static Object fromJson(String json, Class objectClass) throws Exception {
+        JsonFactory f = new MappingJsonFactory();
+        JsonParser jp = f.createParser(json);
+        Object obj = jp.readValueAs(objectClass);
+        return obj;
+    }
+
 
 }
