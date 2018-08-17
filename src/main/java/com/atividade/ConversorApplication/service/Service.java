@@ -18,7 +18,9 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 
 @RestController
@@ -42,23 +44,25 @@ public class Service {
     }
 
 
-
     @RequestMapping(value = "/lerArquivo", method = RequestMethod.POST)
     public @ResponseBody
-    S3Object lerArquivo(@RequestBody MultipartFile videoParaConversao) {
+    String lerArquivo(@RequestBody MultipartFile videoParaConversao) {
         try {
 
             if (videoParaConversao == null) {
 
                 S3Object videoS3 = consultar("sample.dv");
 
-                Object job = converterArquivo(videoS3.getObjectContent().getHttpRequest().getURI().toString());
+                Object objetoRetorno = converterArquivo(videoS3.getObjectContent().getHttpRequest().getURI().toString());
 
+                Integer job = new ArrayList<Integer>(((LinkedHashMap) objetoRetorno).values()).get(0);
 
+                progresso(job);
 
-                S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, "saida/sample.mp4"));
+                //String video = new ArrayList<String>(((LinkedHashMap) objetoRetorno).values()).get(1);
 
-                return video;
+                return "https://atividadeentrada.s3.us-east-2.amazonaws.com/saida/videoconvertido.mp4";
+
 
             } else {
 
@@ -66,11 +70,17 @@ public class Service {
 
                 S3Object videoS3 = consultar(videoParaConversao.getOriginalFilename());
 
-                Object job = converterArquivo(videoS3.getObjectContent().getHttpRequest().getURI().toString());
+                Object objetoRetorno = converterArquivo(videoS3.getObjectContent().getHttpRequest().getURI().toString());
 
-                S3Object video = configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, "saida/sample.mp4"));
+                Integer job = new ArrayList<Integer>(((LinkedHashMap) objetoRetorno).values()).get(0);
+
+                progresso(job);
+
+                String video = new ArrayList<String>(((LinkedHashMap) objetoRetorno).values()).get(1);
 
                 return video;
+
+
             }
 
 
@@ -129,14 +139,25 @@ public class Service {
             con.setRequestProperty("Zencoder-Api-Key", configuracoes.keyZencoder);
             con.setDoOutput(true);
 
-            con.setRequestProperty("live_stream", "true");
-            con.setRequestProperty("input", arquivoS3);
+//            con.setRequestProperty("live_stream", "true");
+            //con.setRequestProperty("input", arquivoS3);
+//            con.setRequestProperty("credentials", "s3");
+//            con.setRequestProperty("url", "https://atividadeentrada.s3.us-east-2.amazonaws.com/saida/videoconvertido.mp4");
 
             con.setRequestMethod("POST");
 
             OutputStreamWriter writer = new OutputStreamWriter(con.getOutputStream());
 
-            String msg = "{\"input\": \"" + arquivoS3 + "\"}";
+//        String msg = "{\"input\": \"" + arquivoS3 + "\" , \"live_stream\": \"true\" , \"credentials\": \"S3\" }";
+
+
+            String msg = "{\"input\": \"" + arquivoS3 + "\", \"outputs\":[{\"credentials\": \"s3\" , \"url\": \"https://atividadeentrada.s3.us-east-2.amazonaws.com/saida/videoconvertido.mp4\"}]}";
+            //String msg = "{\"credentials\": \"S3\"}";
+
+//            "outputs":[{"id":"1951451283"}]
+            //\"url\": \"https://atividadeentrada.s3.us-east-2.amazonaws.com/saida/videoconvertido.mp4\"
+//"url": "https://atividadeentrada.s3.us-east-2.amazonaws.com/saida/videoconvertido.mp4",
+
 
             writer.write(msg);
             writer.flush();
@@ -144,20 +165,12 @@ public class Service {
 
             con.connect();
 
-
-            if (con.getResponseCode() == HttpURLConnection.HTTP_OK) {
-            } else {
-            }
-
-
-            InputStream response = con.getInputStream();
-
             String result;
             BufferedInputStream bis = new BufferedInputStream(con.getInputStream());
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             int result2 = bis.read();
 
-            while(result2 != -1) {
+            while (result2 != -1) {
                 buf.write((byte) result2);
                 result2 = bis.read();
             }
@@ -167,7 +180,7 @@ public class Service {
 
             Object objetoRetorno = configuracoes.fromJson(result, Object.class);
 
-            return response;
+            return objetoRetorno;
 
 
         } catch (MalformedURLException e) {
@@ -178,13 +191,11 @@ public class Service {
             e.printStackTrace();
             return null;
             //throws e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
             //throws e;
         }
-
 
 
     }
@@ -192,13 +203,68 @@ public class Service {
 
     @RequestMapping(value = "/progresso/{jobId}", method = RequestMethod.GET)
     public @ResponseBody
-    String progresso(@PathVariable("jobId") String jobId) {
+    String progresso(@PathVariable("jobId") Integer jobId) {
 
-        return "";//configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, configuracoes.entradaS3 + video));
+        try {
+            URL url = new URL("https://app.zencoder.com/api/v2/jobs/" + jobId + "/progress");
+
+
+            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+
+            con.setRequestProperty("Content-Type", configuracoes.ContentType);
+            con.setRequestProperty("Zencoder-Api-Key", configuracoes.keyZencoder);
+            con.setDoOutput(true);
+
+
+            con.setRequestMethod("GET");
+
+            con.connect();
+
+            String result;
+            BufferedInputStream bis = new BufferedInputStream(con.getInputStream());
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            int result2 = bis.read();
+
+            while (result2 != -1) {
+                buf.write((byte) result2);
+                result2 = bis.read();
+            }
+            result = buf.toString();
+
+            con.disconnect();
+
+
+            Object objetoRetorno = configuracoes.fromJson(result, Object.class);
+
+            String retorno = new ArrayList<String>(((LinkedHashMap) objetoRetorno).values()).get(0);
+
+
+            if (retorno.equals("processing") || retorno.equals("waiting")) {
+                progresso(jobId);
+                retorno = null;
+            }
+
+
+            return retorno;
+
+
+            //return "";//configuracoes.S3client().getObject(new GetObjectRequest(configuracoes.bucketName, configuracoes.entradaS3 + video));
+
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return null;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+            //throws e;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+            //throws e;
+        }
     }
-
-
-
 
 }
 
